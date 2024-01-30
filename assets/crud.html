@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Operations</title>
+</head>
+<body>
+    <h1>CRUD Operations</h1>
+
+    <!-- Form for Creating a new user -->
+    <h2>Create User</h2>
+    <form id="createUserForm">
+        <label for="newUid">Username:</label>
+        <input type="text" id="newUid" name="newUid" required><br>
+
+        <label for="newPassword">Password:</label>
+        <input type="password" id="newPassword" name="newPassword" required><br>
+
+        <label for="newBirthYear">Birth Year:</label>
+        <input type="number" id="newBirthYear" name="newBirthYear" required><br>
+
+        <button type="button" onclick="createUser()">Create User</button>
+        <p id="createUserMessage"></p>
+    </form>
+
+    <!-- Table for Displaying Users -->
+    <h2>All Users</h2>
+    <table id="allUsersTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Birth Year</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <!-- Form for Deleting a user -->
+    <h2>Delete User</h2>
+    <form id="deleteUserForm">
+        <label for="deleteUserId">User ID:</label>
+        <input type="number" id="deleteUserId" name="deleteUserId" required><br>
+
+        <button type="button" onclick="deleteUser()">Delete User</button>
+        <p id="deleteUserMessage"></p>
+    </form>
+
+    <!-- Form for Editing a user -->
+    <h2>Edit User</h2>
+    <form id="editUserForm">
+        <label for="editUserId">User ID:</label>
+        <input type="number" id="editUserId" name="editUserId" required><br>
+
+        <label for="editNewUid">New Username:</label>
+        <input type="text" id="editNewUid" name="editNewUid" required><br>
+
+        <label for="editNewPassword">New Password:</label>
+        <input type="password" id="editNewPassword" name="editNewPassword" required><br>
+
+        <label for="editNewBirthYear">New Birth Year:</label>
+        <input type="number" id="editNewBirthYear" name="editNewBirthYear" required><br>
+
+        <button type="button" onclick="editUser()">Edit User</button>
+        <p id="editUserMessage"></p>
+    </form>
+
+    <!-- Script for Fetching and Displaying Users -->
+    <script>
+        // Function to fetch and display all users
+        function fetchAllUsers() {
+            fetch('http://localhost:5000/api/users', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const allUsersTableBody = document.querySelector('#allUsersTable tbody');
+                allUsersTableBody.innerHTML = '';
+
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.uid}</td>
+                        <td>${user.password}</td>
+                        <td>${user.birth_year}</td>
+                    `;
+                    allUsersTableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Initial fetch of all users when the page loads
+        fetchAllUsers();
+
+        // Function to delete a user
+        function deleteUser() {
+            const deleteUserId = document.getElementById('deleteUserId').value;
+
+            fetch(`http://localhost:5000/api/users/${deleteUserId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('deleteUserMessage').innerText = data.message;
+                fetchAllUsers(); // Refresh the user table after deletion
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Function to edit a user
+        function editUser() {
+            const editUserId = document.getElementById('editUserId').value;
+            const editNewUid = document.getElementById('editNewUid').value;
+            const editNewPassword = document.getElementById('editNewPassword').value;
+            const editNewBirthYear = document.getElementById('editNewBirthYear').value;
+
+            fetch(`http://localhost:5000/api/users/${editUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    uid: editNewUid,
+                    password: editNewPassword,
+                    birthYear: editNewBirthYear,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editUserMessage').innerText = data.message;
+                fetchAllUsers(); // Refresh the user table after editing
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Function to create a new user
+        function createUser() {
+            const newUid = document.getElementById('newUid').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const newBirthYear = document.getElementById('newBirthYear').value;
+
+            fetch('http://localhost:5000/api/users', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    uid: newUid,
+                    password: newPassword,
+                    birthYear: newBirthYear,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('createUserMessage').innerText = data.message;
+                fetchAllUsers(); // Refresh the user table after creation
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+
+    <!-- Form for user login -->
+    <form id="loginForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+
+        <label for="birthYear">Birth Year:</label>
+        <input type="number" id="birthYear" name="birthYear" required><br>
+
+        <button type="button" onclick="loginUser()">Login</button>
+        <p id="authMessage"></p>
+    </form>
+
+    <script>
+        // Function to handle successful login
+        function handleSuccessfulLogin(response) {
+            localStorage.setItem('auth_token', response.token);
+            if (response.redirect) {
+                // Redirect to the specified page after successful login
+                window.location.href = response.redirect;
+            } else {
+                // Display a message for authenticated users without CRUD permission
+                document.getElementById('authMessage').innerText = 'You are authenticated, but do not have permission to view the CRUD page.';
+            }
+        }
+
+        // Function to perform user login
+        function loginUser() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const birthYear = document.getElementById('birthYear').value;
+
+            // Make a POST request to the backend API for user authentication
+            fetch('http://localhost:5000/api/users/authenticate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ uid: username, password: password, birthYear: birthYear }),
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json().then(data => handleSuccessfulLogin(data));
+                } else if (response.status === 401) {
+                    // Handle unsuccessful login by displaying a message and redirecting to signup
+                    document.getElementById('authMessage').innerText = 'Invalid credentials. Redirecting to signup page...';
+                    window.location.href = 'signup.html';
+                } else {
+                    // Handle other status codes or errors
+                    throw new Error('Authentication failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
